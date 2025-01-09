@@ -1,0 +1,34 @@
+@startuml
+
+actor Operator as oper
+participant "MES" as mes
+participant "MES API" as api 
+participant "MES Cache" as cache
+database "MES db" as db 
+
+loop Async cache updating
+    cache -> db++: Gets list of orders
+    cache <-- db--: List of orders
+    cache++
+end
+
+oper -> mes++: Request orders for showing
+mes -> api++: Requests orders
+api -> cache: Requests orders
+api <-- cache: Returns orders from cache
+mes <-- api--: Returns orders
+oper <-- mes--: Shows orders
+
+oper -> mes++: Takes order N in work
+mes -> api++: Change order N status
+api -> db++: Update order N status
+api <-- db--: Order N status updated
+mes <-- api: Order N status changed
+oper <-- mes--: Order N is in work
+
+cache <- api--: Invalidates order N cache
+
+cache -> db++: Requests order N data
+cache <-- db--: Returns order N data
+
+@enduml
